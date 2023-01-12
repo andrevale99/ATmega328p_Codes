@@ -62,6 +62,9 @@ int main()
 //===================================================
 //  FUNCOES
 //===================================================
+/**
+ * @brief Funcao de setup
+*/
 void setup()
 {
     gpio_setup();
@@ -69,6 +72,11 @@ void setup()
     interrupts_setup();
 }
 
+/**
+ * @brief Configuracao dos pinos utilizados
+ * 
+ * @note Ativa o Pull-Up do botao
+*/
 void gpio_setup()
 {  
     SetBit(DDRB, VRD);
@@ -80,14 +88,23 @@ void gpio_setup()
     SetBit(PORTB, BT);
 }
 
+/**
+ * @brief Configuracao da interrupcao externa
+ * 
+ * @note Ativa as interrupcoes nos pinos PCINT0..7
+ * e ativando especificamente o PCINT3
+*/
 void interrupts_setup()
 {
     SetBit(PCICR, PCIE0);
 
     SetBit(PCMSK0, PCINT3);
-    SetBit(PCMSK0, PCINT4);
 }
 
+/**
+ * @brief Logica do semaforo utilizada
+ * na interrupcao
+*/
 void logica_semaforo()
 {
     for(i=0; i<5; ++i)
@@ -110,6 +127,15 @@ void logica_semaforo()
     ClrBit(PORTB, VER);
 }
 
+
+/**
+ * @brief Funcao interupcao caso haja alguma
+ * mudanca no pino PCINT3 (PB3 ou pino 11)
+ * 
+ * @note Essa interrupcao é ativada na mudanca 
+ * de estado do pino, tanto faz se foi de 0 para 1
+ * ou de i para 0 (olhar datasheet cpt. 12)
+*/
 ISR(PCINT0_vect)
 {
     if(!(PINB & (1<<BT)))
