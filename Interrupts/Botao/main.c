@@ -166,7 +166,7 @@ void logica_semaforo()
 */
 ISR(PCINT0_vect)
 {
-    if(!(PINB & (1<<BT)) && ativar_logica)
+    if(!TestBit(PINB, BT) && ativar_logica)
         logica_semaforo();
         
     /*if(!(PINB & (1<<BT_2)))
