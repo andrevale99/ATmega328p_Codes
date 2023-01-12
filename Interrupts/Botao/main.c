@@ -31,9 +31,9 @@
 //===================================================
 //  VARIAVEIS
 //===================================================
-volatile uint8_t i = 0;
-volatile unsigned long tempo = 0;
-volatile bool ativar_logica = false;
+volatile uint8_t i = 0; //Variavel de iteracao
+volatile unsigned long tempo = 0; //Conta os segundos pela interrupcao
+volatile bool ativar_logica = false; //Flag para ativar a logica
 //===================================================
 //  PROTOTIPOS
 //===================================================
@@ -111,7 +111,8 @@ void interrupts_setup()
  * @brief Configuracao da interrupcao externa
  * 
  * @note o clock do timer1 e de 16e6/1024 e o comparador
- * do OCR1A e a interrupcao pela comparacao
+ * do OCR1A e a interrupcao pela comparacao, em suma, ativa
+ * a interrupcao a cada segundo, aproximadamente
 */
 void timer1_setup()
 {
@@ -172,12 +173,14 @@ ISR(PCINT0_vect)
         ClrBit(PORTB, VRD);*/
 }
 
+/**
+ * @brief Interrupcao de 1 segundo para contar
+ * os segundos e ativar a flag para o semaforo
+*/
 ISR(TIMER1_COMPA_vect)
 {
     if(tempo > 5)
-    {
         ativar_logica = true;
-    }
 
     ++tempo;
 }
