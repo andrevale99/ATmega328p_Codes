@@ -168,9 +168,6 @@ ISR(PCINT0_vect)
 {
     if(!TestBit(PINB, BT) && ativar_logica)
         logica_semaforo();
-        
-    /*if(!(PINB & (1<<BT_2)))
-        ClrBit(PORTB, VRD);*/
 }
 
 /**
