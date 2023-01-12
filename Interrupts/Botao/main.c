@@ -15,6 +15,7 @@
 #include <util/delay.h>
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define VRD PB0
 #define AMA PB1
@@ -31,7 +32,8 @@
 //  VARIAVEIS
 //===================================================
 volatile uint8_t i = 0;
-
+volatile unsigned long tempo = 0;
+volatile bool ativar_logica = false;
 //===================================================
 //  PROTOTIPOS
 //===================================================
@@ -39,10 +41,12 @@ void setup();
 
 void gpio_setup();
 void interrupts_setup();
+void timer1_setup();
 
 void logica_semaforo();
 
 ISR(PCINT0_vect);
+ISR(TIMER1_COMPA_vect);
 //===================================================
 //  MAIN
 //===================================================
@@ -70,6 +74,8 @@ void setup()
     gpio_setup();
 
     interrupts_setup();
+
+    timer1_setup();
 }
 
 /**
@@ -102,6 +108,23 @@ void interrupts_setup()
 }
 
 /**
+ * @brief Configuracao da interrupcao externa
+ * 
+ * @note o clock do timer1 e de 16e6/1024 e o comparador
+ * do OCR1A e a interrupcao pela comparacao
+*/
+void timer1_setup()
+{
+    SetBit(TCCR1B, WGM12);
+    SetBit(TCCR1B, CS12);
+    SetBit(TCCR1B, CS10);
+
+    SetBit(TIMSK1, OCIE1A);
+
+    OCR1A = 15625;
+}
+
+/**
  * @brief Logica do semaforo utilizada
  * na interrupcao
 */
@@ -125,6 +148,10 @@ void logica_semaforo()
         _delay_ms(500);
     }
     ClrBit(PORTB, VER);
+
+    tempo = 0;
+
+    ativar_logica = false;
 }
 
 
@@ -138,9 +165,19 @@ void logica_semaforo()
 */
 ISR(PCINT0_vect)
 {
-    if(!(PINB & (1<<BT)))
+    if(!(PINB & (1<<BT)) && ativar_logica)
         logica_semaforo();
         
     /*if(!(PINB & (1<<BT_2)))
         ClrBit(PORTB, VRD);*/
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+    if(tempo > 5)
+    {
+        ativar_logica = true;
+    }
+
+    ++tempo;
 }
