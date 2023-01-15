@@ -4,9 +4,17 @@
 .INCLUDE "./m328Pdef.inc"
 
 .cseg
-.org 0x0033
+.org 0x00
+
+.org 0x0016
+	jmp TIM1_COMPA
 
 Setup:
+	ldi r16, high(RAMEND)
+	out SPH, r16
+	ldi r16, low(RAMEND)
+	out SPL, r16
+
 	; Enable change of Interrupt Vectors
 	ldi r16, (1<<IVCE)
 	out MCUCR, r16
@@ -42,8 +50,15 @@ Setup:
 
 
 TIM1_COMPA:
-	cbi PORTB, PB5
-	rjmp Start
+	ldi r16, 0x20
+	in r17, PINB
+	eor r17, r16
+	out PORTB, r17
+
+	clr r16
+	clr r17
+
+	reti
 
 Start:
 	rjmp Start
