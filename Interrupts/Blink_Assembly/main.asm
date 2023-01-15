@@ -4,7 +4,7 @@
 .INCLUDE "./m328Pdef.inc"
 
 .cseg
-.org 0x00
+.org 0x0033
 
 Setup:
 	; Enable change of Interrupt Vectors
