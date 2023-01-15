@@ -40,12 +40,12 @@ Setup:
 
 	rjmp Start
 
-Start:
-	sbi PORTB, PB5
-	rjmp Start
 
 TIM1_COMPA:
 	cbi PORTB, PB5
+	rjmp Start
+
+Start:
 	rjmp Start
 
 
