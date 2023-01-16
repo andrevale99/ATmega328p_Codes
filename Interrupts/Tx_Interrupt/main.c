@@ -32,7 +32,7 @@
 //===================================================
 //  VARIAVEIS
 //===================================================
-
+volatile uint8_t cnt = 0x00;
 
 //===================================================
 //  PROTOTIPOS
@@ -52,9 +52,11 @@ int main()
     setup();
     sei();
 
+    UDR0 = 0xAA;
+
     for(;;)
     {
-
+        _delay_ms(1000);
     }
 
     return 0;
@@ -68,7 +70,8 @@ int main()
 */
 void setup()
 {
-
+    SetBit(DDRB, DDB5);
+    USART_Init(MYUBRR);
 }
 
 /**
@@ -84,8 +87,14 @@ void USART_Init(unsigned int ubrr)
     /*Set baud rate */
     UBRR0H = (unsigned char)(ubrr>>8);
     UBRR0L = (unsigned char)ubrr;
-    /*Enable transmitter */
+
+    /*Enable transmitter 
+    Enable interrupt Data Empty
+    Enable Transmitter complete*/
     SetBit(UCSR0B, TXEN0);
+    SetBit(UCSR0B, TXCIE0);
+    SetBit(UCSR0B, UDRIE0);
+
     /* Set frame format: 8data, 2stop bit */
     SetBit(UCSR0C, USBS0);
     SetBit(UCSR0C, UCSZ00);
@@ -112,7 +121,8 @@ void USART_Transmit(unsigned char data)
 */
 ISR(USART_UDRE_vect)
 {
-
+    ++cnt;
+    UDR0 = cnt;
 }
 
 /**
@@ -120,5 +130,5 @@ ISR(USART_UDRE_vect)
 */
 ISR(USART_TX_vect)
 {
-
+    ToggleBit(PORTB, PB5);
 }
