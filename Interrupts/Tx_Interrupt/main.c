@@ -8,6 +8,10 @@
  * para enviar o dado, esta aqui pq copiei e colei caso alguem necessite
  * utiliza-la e esta com preguica de pegar do datasheet :)
  * 
+ * @note O codigo utiliza de um botao no PB0 com PULL-UP o qual serve 
+ * para ativar o comeco da transmissao, ao aterrar o PB0. Logica do codigo 
+ * nos comentarios no codigo
+ * 
 */
 
 #ifndef F_CPU
@@ -32,8 +36,9 @@
 //===================================================
 //  VARIAVEIS
 //===================================================
-volatile uint8_t cnt = 0x00;
-
+volatile uint8_t idx = 0x00; //indice para percorrer o vetor
+const char msg[] = "TX COMPLETE\n"; //vetor para transmitir na serial
+volatile bool tx_em_acao = false; //booleano para indicar fim da operacao de trnasmissao
 //===================================================
 //  PROTOTIPOS
 //===================================================
@@ -52,11 +57,13 @@ int main()
     setup();
     sei();
 
-    UDR0 = 0xAA;
-
     for(;;)
     {
-        _delay_ms(1000);
+        //Caso pressione o botao, comece a transmissao
+        //Ativa o bit de interrupcao de Verificar se o registrador
+        //UDR0 esta vazio
+        if(!(PINB & (1<<PINB0)) && !tx_em_acao)
+            SetBit(UCSR0B, UDRIE0);
     }
 
     return 0;
@@ -71,6 +78,10 @@ int main()
 void setup()
 {
     SetBit(DDRB, DDB5);
+    
+    ClrBit(DDRB, PB0);
+    SetBit(PORTB, PB0);
+
     USART_Init(MYUBRR);
 }
 
@@ -89,11 +100,11 @@ void USART_Init(unsigned int ubrr)
     UBRR0L = (unsigned char)ubrr;
 
     /*Enable transmitter 
-    Enable interrupt Data Empty
-    Enable Transmitter complete*/
+    Desativa a interrupcao Data Empty
+    Desativa a interrupcao complete*/
     SetBit(UCSR0B, TXEN0);
-    SetBit(UCSR0B, TXCIE0);
-    SetBit(UCSR0B, UDRIE0);
+    ClrBit(UCSR0B, TXCIE0);
+    ClrBit(UCSR0B, UDRIE0);
 
     /* Set frame format: 8data, 2stop bit */
     SetBit(UCSR0C, USBS0);
@@ -118,17 +129,54 @@ void USART_Transmit(unsigned char data)
 
 /**
  * @brief USART, data register empty
+ * 
+ * @note Entra nesta interrupcao quando
+ * nao haver dado no registrador UDR0
+ * 
+ * @note Aqui ele comeca a operacao de transmissao
+ * envia um dado para sinalizar algo, para depois 
+ * desativar esta interrupcao e ativa a interrupcao de TX
 */
 ISR(USART_UDRE_vect)
 {
-    ++cnt;
-    UDR0 = cnt;
+    if(!(PINB & (1<<PINB0)))
+    {
+        do
+        {
+            SetBit(PORTB, PB5);
+        } while (!(PINB & (1<<PINB0)));
+        ClrBit(PORTB, PB5);
+
+        tx_em_acao = true;
+        UDR0 = '&';
+        idx = 0;
+    }
+
+    ClrBit(UCSR0B, UDRIE0);
+    SetBit(UCSR0B, TXCIE0);
 }
 
 /**
  * @brief USART, Tx complete
+ * 
+ * @note Entra nesta interrupcao quando a 
+ * transmissao for completa
+ * 
+ * @note Ao comecar a transmissao, percorre o vetor a
+ * cada fim de transmissao, caso termine de percorrer o vetor
+ * troca a flag booleana e sai da interrupcao antes
+ * de enviar o '\0'
 */
 ISR(USART_TX_vect)
 {
-    ToggleBit(PORTB, PB5);
+    if(msg[idx]=='\0')
+    {
+        ClrBit(UCSR0B, TXCIE0);
+        idx = 0;
+        tx_em_acao = false;
+        return;
+    }
+        
+    UDR0 = msg[idx];
+    ++idx;
 }
