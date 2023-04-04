@@ -50,10 +50,32 @@ RESETaddr:
 
 	clr r16
 
+	ldi YL, LOW(v)
+	ldi YH, HIGH(v) 
+
+	ldi r16, 0x50
+	st Y+, r16
+
+	ldi r16, 0x20
+	st Y+, r16
+
+	ldi r16, 0x30
+	st Y+, r16
+	
+	ldi r16, 0x40
+	st Y+, r16
+
+	clr r16
+
 	rjmp Setup
 
 Setup:
+	ldi YL, LOW(v)
+	ldi YH, HIGH(v)
 
+	ldd r16, Y+3
+
+	out PORTD, r16
 
 Loop:
 	rjmp Loop
