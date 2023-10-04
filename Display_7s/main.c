@@ -1,57 +1,78 @@
+/*
+  ANODO COMUM: PINOS ACINADOS EM 0 E DISPLAY com
+  5V EM COMUM
+
+  CATODO COMUN: PINOS ACIONADOS EM 1 E DISPLAY COM
+  GND EM COMUM
+
+  O CÓDIGO ESTA PARA ANODO COMUM
+  caso queira para catodo comum, so inverter
+  os bits do driver
+*/
+
 #ifndef F_CPU
-    #define F_CPU 16000000Ul
+  #define F_CPU 16000000UL
 #endif
 
 #include <avr/io.h>
 #include <util/delay.h>
 
-#define BITS_7S PORTD
+#define DIG_1 PB0
+#define DIG_2 PB1
 
-#define E_D1 PD7
-#define E_D2 PB0
-
-//==================================
-//  MAIN
-//==================================
-
-
-//==================================
-//  PROTOTIPOS
-//==================================
-void setup();
-
-//==================================
-//  MAIN
-//==================================
-int main(void)
+//Usei só para mapear
+const struct 
 {
-    setup();
+  uint8_t d0 = ~0x3F;
+  uint8_t d1 = ~0x06;
+  uint8_t d2 = ~0x5B;
+  uint8_t d3 = ~0x4F;
+  uint8_t d4 = ~0x66;
+  uint8_t d5 = ~0x6D;
+  uint8_t d6 = ~0x7D;
+  uint8_t d7 = ~0x07;
+  uint8_t d8 = ~0x7F;
+  uint8_t d9 = ~0x67;
+}Driver;
 
-    while(1)
-    {
-        PORTB |= (1<<E_D2);
-        _delay_ms(1000);
-        PORTB &= ~(1<<E_D2);
-        _delay_ms(1000);
-    }
+//Melhor utilizar da forma de vetor
+//codigo fica mais legivel
+uint8_t digitos[] = {~0x3F, ~0x06, ~0x5B, ~0x4F,
+                     ~0x66, ~0x6D, ~0x7D,
+                     ~0x07, ~0x7F, ~0x67};
 
-    return 0;
+void GPIOSetup();
+
+int main()
+{
+  GPIOSetup();
+
+  while(1)
+  {
+      PORTB = 0x01;
+      PORTD = digitos[5];
+      _delay_ms(50);
+
+      PORTD = 0x7F;
+      //Serve para apagar os led 
+      //antes de pular para o proximo digito
+      //Se tirar ficara bugado
+
+      PORTB = 0x02;
+      PORTD = digitos[9];
+      _delay_ms(50);
+
+      PORTD = 0x7F; 
+      //Serve para apagar os led 
+      //antes de pular para o proximo digito
+      //Se tirar ficara bugado
+  }
+
+  return 0;
 }
 
-//==================================
-//  FUNCOES
-//==================================
-void setup()
+void GPIOSetup()
 {
-    //Desativa o RX e TX para serem usados
-    //como pinos normais
-    UCSR0B = 0x00;
-
-    DDRD |= 0xFF; //Coloca os pinos como OUTPUTS
-    DDRB |= 0x01;
-    
-    //Como é display de 7 segmentos com anodo comum
-    //os led devem ser aterrados para ligar os leds
-    PORTD &= ~((1<<PD0) | (1<<PD1)); 
-    BITS_7S |= 0x00;
+  DDRB |= (1<<DIG_1) | (1<<DIG_2);
+  DDRD |= 0x7F;
 }
