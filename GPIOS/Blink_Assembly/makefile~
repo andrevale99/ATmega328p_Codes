@@ -1,5 +1,5 @@
 FILENAME   = main
-PORT       = /dev/ttyUSB0
+PORT       = /dev/ttyACM0
 DEVICE     = atmega328p
 PROGRAMMER = arduino
 
