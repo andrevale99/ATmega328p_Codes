@@ -6,11 +6,10 @@
 .cseg
 .org 0x00
 	jmp Setup
-;	Configura  o endereco absoluto do vetor de interrupcao
-;na SRAM
 .org 0x0016
 	rjmp TIM1_COMPA
 
+.org 0x64
 Setup:
 	;	Inicializa e configura os vetores de interrupcao
 	;trecho retirado do datasheet
@@ -18,13 +17,6 @@ Setup:
 	out SPH, r16
 	ldi r16, low(RAMEND)
 	out SPL, r16
-
-	; Enable change of Interrupt Vectors
-	;ldi r16, (1<<IVCE)
-	;out MCUCR, r16
-	; Move interrupts to Boot Flash section
-	;ldi r16, (1<<IVSEL)
-	;out MCUCR, r16
 
 	sbi DDRB, DDB5
 	cbi PORTB, PB5

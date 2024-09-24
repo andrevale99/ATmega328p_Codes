@@ -6,6 +6,7 @@
 .org UTXCaddr
 	jmp USART_TX
 
+.org 0x64
 Setup:
 	; Inicializa a pilha 
 	ldi r16, high(RAMEND)

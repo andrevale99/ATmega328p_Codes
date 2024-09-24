@@ -2,3 +2,4 @@
 *.hex
 *.o
 *.cof
+.vscode/*
