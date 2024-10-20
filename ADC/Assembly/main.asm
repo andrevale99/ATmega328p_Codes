@@ -5,30 +5,21 @@
 
 .org RESETAddr
     jmp RESET
-.org OC1Aaddr
-    jmp TIMER_1_COMPA
+.org OC1Baddr
+    jmp TIMER_1_COMPB
 .org ADCCaddr
     jmp ADC_INTERRUPT
 
 RESET:
-    ldi r16, (1<<REFS0)
-    sts ADMUX, r16
-
-    ; Habilita o ADC com a interrupcao
-    ;com o prescale de 128
-    ldi r16, (1<<ADIE) | (0x07<<ADPS0) | (1<<ADATE)
-    sts ADCSRA, r16
-    ; Trigger no TIME_1_OVERFLOW
-    ldi r16, (1<<ADTS2) | (1<<ADTS0)
-    sts ADCSRB, r16
-
     ; Escreve o prescale de 16e6/1024
 	;e o modo NORMAL do Timer 1
 	clr r16
 	sbr r16, (1<<CS12) | (1<<CS10)
 	sts TCCR1B, r16 
 
-	clr r16
+    ; ldi r16, (1<<OCIE1B)
+    ; sts TIMSK1, r16
+
 
 	ldi r16, LOW(15625)  
 	ldi r17, HIGH(15625)
@@ -42,14 +33,20 @@ RESET:
     sbi DDRB, DDB5
 	cbi PORTB, PB5
 
+    ldi r16, (1<<REFS0)
+    sts ADMUX, r16
+    ; Habilita o ADC com a interrupcao
+    ;com o prescale de 128
+    ; ldi r16, (1<<ADIE) | (0x07<<ADPS0) | (1<<ADATE)
+    ldi r16, 0xEF
+    sts ADCSRA, r16
+    ; Trigger no TIME_2_COMPARE_B
+    ldi r16, (1<<ADTS2) | (1<<ADTS0)
+    sts ADCSRB, r16
+
+	clr r16
+
     sei
-
-    ldi r16, (1<<ADEN)
-    sts ADCSRA, r16
-
-    ldi r16, (1<<ADSC)
-    sts ADCSRA, r16
-    clr r16
 
     jmp MAIN
 
@@ -58,7 +55,13 @@ RESET:
 MAIN:
     rjmp MAIN
 
-TIMER_1_COMPA:
+TIMER_1_COMPB:
+    ldi r16, $0
+    sts TCNT1H, r16
+    sts TCNT1L, r16
+
+    clr r16
+
 	reti
 
 ADC_INTERRUPT:
@@ -67,10 +70,19 @@ ADC_INTERRUPT:
 	eor r17, r16 ;Realiza a troca do pino PB5
 	out PORTB, r17 ;Escreve no PORTB
 
-    ldi r16, (1 << OCF1A)
-    sts TIFR1, r16;
+    ldi r16, $0
+    ldi r16, (1 << OCF1B)
+    sts TIFR1, r16
     
     clr r16
 	clr r17
+
+    ldi r16, 0xEF
+    sts ADCSRA, r16
+    
+    ldi r16, $0
+    sts TCNT1H, r16
+    sts TCNT1L, r16
+    clr r16
 
     reti
