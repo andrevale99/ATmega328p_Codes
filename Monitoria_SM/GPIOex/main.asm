@@ -6,7 +6,7 @@
 .def temp = r16
 
 .dseg
-	valor: .byte 1
+	valor: .byte 3
 
 .cseg
 .org 0x0000
@@ -31,12 +31,31 @@ RESET:
 	ldi ZL, LOW(valor)
 	ldi ZH, HIGH(valor)
 
-	ldi temp, 234
+	ldi temp, 12
+	st Z+, temp
+
+	ldi temp, 34
+	st Z+, temp
+
+	ldi temp, 56
 	st Z, temp
 
-MAIN:
-	ld temp, Z
+	ldi ZL, LOW(valor)
+	ldi ZH, HIGH(valor)
 
+MAIN:
+	ld temp, Z+
+
+	cpi ZL, LOW(valor) + 4
+	breq reset_pointer
+	rjmp else_reset_pointer
+
+reset_pointer:
+	ldi ZL, LOW(valor)
+	ldi ZH, HIGH(valor)
+	rjmp MAIN
+
+else_reset_pointer:
 	call BinBCD
 
 	swap centenas
