@@ -52,6 +52,8 @@ MAIN:
 	call delay
 
 	clr centenas
+	clr dezenas
+	clr unidades
 
 	rjmp MAIN
 
