@@ -1,12 +1,18 @@
 .INCLUDE "./m328Pdef.inc"
 
+.def unidades = r0
+.def dezenas = r1
+.def centenas = r2
+.def temp = r16
+
+.dseg
+	valor: .byte 1
+
 .cseg
 .org 0x0000
 	jmp RESET
 
 RESET:
-	lista: .db 0x01, 0x0F, 0x09, 0x0F, 0x05, 0x07
-	
 	;	Inicializa e configura os vetores de interrupcao
 	;trecho retirado do datasheet
 	ldi r16, high(RAMEND)
@@ -22,30 +28,51 @@ RESET:
 
 	cli
 
+	ldi ZL, LOW(valor)
+	ldi ZH, HIGH(valor)
+
+	ldi temp, 234
+	st Z, temp
+
 MAIN:
+	ld temp, Z
 
-	;in r16, PIND ;Ler a as portas dos PORTD
-    ;swap r16
-    ;inc r16
-    ;swap r16
-	
-	cpi ZL, LOW(lista<<1) + 6
-	breq reset_Z
-	jmp else_reset_z
+	call BinBCD
 
-reset_Z:
-	ldi ZH, HIGH(lista<<1)
-	ldi ZL, LOW(lista<<1)
-	jmp end_reset_z
-else_reset_z:
-	lpm r16, Z+
-	swap r16
-	out PORTD, r16 ;Escreve no PORTD
-
+	swap centenas
+	out PORTD, centenas
 	call delay
 
-end_reset_z:
+	swap dezenas
+	out PORTD, dezenas
+	call delay
+
+	swap unidades
+	out PORTD, unidades
+	call delay
+
+	clr centenas
+
 	rjmp MAIN
+
+BinBCD:
+	cpi temp, 100
+	brlo BinBCD_dezenas
+	subi temp, 100
+	inc centenas
+	rjmp BinBCD
+
+BinBCD_dezenas:
+	cpi temp, 10
+	brlo exit_BinBCD
+	subi temp, 10
+	inc dezenas
+	rjmp BinBCD_dezenas
+
+exit_BinBCD:
+	mov unidades, temp
+	clr temp
+	ret
 
 delay:
 	ldi r17, 42
